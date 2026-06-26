@@ -1,0 +1,24 @@
+# Binaries
+/bin/
+*.exe
+*.out
+livepolybtc
+
+# Logs (keep the directory, ignore contents)
+/logs/*
+!/logs/.gitkeep
+
+# Local environment / secrets
+.env
+*.local.yaml
+
+# Go
+/vendor/
+coverage.out
+coverage.html
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,24 @@
+services:
+  bot:
+    build: .
+    image: livepolybtc:latest
+    container_name: livepolybtc
+    restart: unless-stopped
+    # Credentials are read from the environment (see .env.example).
+    env_file:
+      - .env
+    environment:
+      # Default to safe paper mode. Override with `-live` to trade for real.
+      POLYMARKET_DRY_RUN: "true"
+    command: ["-config", "/app/configs/config.yaml", "-dry-run"]
+    volumes:
+      # Persist logs and allow live config edits without rebuilding.
+      - ./logs:/app/logs
+      - ./configs:/app/configs:ro
+    # The bot is low-resource; cap it so it can coexist with other services.
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+    stop_grace_period: 15s

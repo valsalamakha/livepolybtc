@@ -1,0 +1,107 @@
+# =============================================================================
+# Polymarket Bitcoin 5-Minute Up/Down Trading Bot — configuration
+#
+# Every strategy/risk/execution parameter lives here. Changing them requires NO
+# recompilation. Secrets are NOT stored here — they come from environment
+# variables (see .env.example):
+#   POLYMARKET_API_KEY, POLYMARKET_SECRET, POLYMARKET_PASSPHRASE
+#   POLYMARKET_ADDRESS (optional), POLYMARKET_PRIVATE_KEY (optional, live only)
+# =============================================================================
+
+# Master safety switch. When true, no live orders are submitted; fills are
+# simulated against the live order book (paper trading). Start here.
+dry_run: true
+
+polymarket:
+  rest_base_url: "https://clob.polymarket.com"
+  gamma_base_url: "https://gamma-api.polymarket.com"
+  ws_base_url: "wss://ws-subscriptions-clob.polymarket.com/ws"
+  chain_id: 137
+
+btc_feed:
+  exchange: "coinbase"        # coinbase | binance | kraken
+  symbol: "BTC-USD"           # coinbase: BTC-USD, binance: BTCUSDT, kraken: XBTUSD
+  poll_interval: 500ms
+  use_websocket: true         # market-data websocket for Polymarket order books
+  stale_after: 3s
+  history_window: 60s
+
+market:
+  # All keywords must appear (case-insensitive) in the market question/slug.
+  keywords:
+    - "bitcoin"
+    - "up or down"
+  series_slug: ""             # optional: narrow discovery to a known series
+  discovery_interval: 15s
+  up_outcome: "Up"
+  down_outcome: "Down"
+
+# -----------------------------------------------------------------------------
+# Strategy — the primary optimization targets.
+# -----------------------------------------------------------------------------
+strategy:
+  final_observation_window: 20s     # only evaluate within this of resolution
+  spike_lookback: 5s                # window over which a price spike is measured
+  minimum_odds: 0.90                # overreacted side must reach this price
+  maximum_btc_move: 15.0            # max BTC move (USD) over lookback to qualify
+  minimum_price_spike: 0.08         # min rise (cents) of the overreacted side
+  minimum_order_book_imbalance: 0.50
+  minimum_liquidity: 50.0           # min resting notional on the entry side
+  minimum_expected_return: 4.5      # required payoff multiple (1/entry_price)
+  maximum_spread: 0.05
+  maximum_entry_price: 0            # 0 => derived from minimum_expected_return
+  entry_deadline: 3s                # do not enter within this of resolution
+  exit_deadline: 2s                 # attempt to flatten within this of resolution
+  max_btc_staleness: 2s
+  depth_levels: 5
+
+# -----------------------------------------------------------------------------
+# Position sizing.
+# -----------------------------------------------------------------------------
+sizing:
+  mode: "fixed"                # fixed | percent | kelly
+  bankroll: 1000.0
+  fixed_size: 20.0             # USD per trade (mode: fixed)
+  percent_of_bankroll: 0.02    # fraction of bankroll (mode: percent)
+  kelly_fraction: 0.25         # fractional Kelly multiplier (mode: kelly)
+  win_probability: 0.55        # assumed edge for Kelly
+  max_trade_size: 50.0
+  min_trade_size: 1.0
+
+# -----------------------------------------------------------------------------
+# Execution engine.
+# -----------------------------------------------------------------------------
+execution:
+  order_type: "FAK"            # GTC | GTD | FOK | FAK
+  marketable_limit_buffer: 0.01
+  max_slippage: 0.02
+  max_retries: 3
+  retry_backoff: 200ms
+  order_timeout: 2s
+  tick_size: 0.01
+
+# -----------------------------------------------------------------------------
+# Risk controls.
+# -----------------------------------------------------------------------------
+risk:
+  daily_stop_loss: 100.0
+  max_loss_per_trade: 25.0
+  max_consecutive_losses: 5
+  max_simultaneous_positions: 1
+  max_daily_trades: 50
+  max_exposure: 100.0
+  kill_switch_enabled: true
+  emergency_liquidate: true
+
+logging:
+  dir: "logs"
+  level: "info"                # debug | info | warn | error
+  csv: true
+  json: true
+  console: true
+
+health:
+  heartbeat_interval: 5s
+  max_reconnect_attempts: 0    # 0 => unlimited
+  reconnect_backoff: 1s
+  max_reconnect_backoff: 30s
