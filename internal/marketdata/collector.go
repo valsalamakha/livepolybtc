@@ -29,6 +29,11 @@ type Collector struct {
 	volume     map[string]float64
 	connected  bool
 	lastUpdate time.Time
+
+	// RawHandler, when set, is invoked with every raw websocket frame before it
+	// is parsed. It is used by diagnostics to dump the live stream. It must not
+	// block.
+	RawHandler func([]byte)
 }
 
 // NewCollector constructs a Collector.

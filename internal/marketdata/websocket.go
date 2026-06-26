@@ -106,6 +106,9 @@ func (c *Collector) runWebsocket(ctx context.Context, tokenIDs []string) error {
 // handleMessage parses one raw frame, which may be a single event object or an
 // array of events.
 func (c *Collector) handleMessage(data []byte) {
+	if c.RawHandler != nil {
+		c.RawHandler(data)
+	}
 	trimmed := trimSpace(data)
 	if len(trimmed) == 0 {
 		return
